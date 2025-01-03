@@ -232,6 +232,87 @@ class CrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+# NOTE: add yolov8 c2f modules
+class C2f(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initializes a CSP bottleneck with 2 convolutions and n Bottleneck blocks for faster processing."""
+        super().__init__()
+        self.c = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.m = nn.ModuleList(BottleneckC2f(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n))
+
+    def forward(self, x):
+        """Forward pass through C2f layer."""
+        y = list(self.cv1(x).chunk(2, 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+    def forward_split(self, x):
+        """Forward pass using split() instead of chunk()."""
+        y = self.cv1(x).split((self.c, self.c), 1)
+        y = [y[0], y[1]]
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+
+class BottleneckC2f(nn.Module):
+    """Standard bottleneck."""
+    def __init__(self, c1, c2, shortcut=True, g=1, k=(3, 3), e=0.5):
+        """Initializes a standard bottleneck module with optional shortcut connection and configurable parameters."""
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, k[0], 1)
+        self.cv2 = Conv(c_, c2, k[1], 1, g=g)
+        self.add = shortcut and c1 == c2
+    def forward(self, x):
+        """Applies the YOLO FPN to input data."""
+        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+
+
+
+# TODO 手写的c2f 输出通道数对应不上，这里直接使用ultralytics的c2f
+class C2F(nn.Module):
+    def __init__(self, in_channels, out_channels, n=1, shortcut=True, expansion=0.5):
+        """
+        C2F 模块的实现。
+        参数:
+            in_channels (int): 输入通道数。
+            out_channels (int): 输出通道数。
+            n (int): Bottleneck 模块的重复次数，默认为 1。
+            shortcut (bool): 是否使用 shortcut 连接，默认为 True。
+            expansion (float): Bottleneck 模块的扩展比例，默认为 0.5。
+        """
+        super(C2F, self).__init__()
+        hidden_channels = int(out_channels * expansion)  # 中间层的通道数
+        # 第一个 1x1 卷积，用于降维
+        self.conv1 = nn.Conv2d(in_channels, hidden_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn1 = nn.BatchNorm2d(hidden_channels)
+        self.act1 = nn.SiLU()  # SiLU 激活函数 (Swish)
+
+        # 第二个 1x1 卷积，用于升维
+        self.conv2 = nn.Conv2d(hidden_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.act2 = nn.SiLU()
+
+        # Bottleneck 模块
+        self.bottlenecks = nn.Sequential(*[BottleneckC2f(hidden_channels, hidden_channels, shortcut) for _ in range(n)])
+    def forward(self, x):
+        # 第一个 1x1 卷积
+        x = self.act1(self.bn1(self.conv1(x)))
+        # 将特征图分为两部分
+        x1, x2 = x.chunk(2, dim=1)  # 沿通道维度分成两部分
+        # 对第二部分进行 Bottleneck 操作
+        x2 = self.bottlenecks(x2)
+        # 拼接两部分特征图
+        x = torch.cat([x1, x2], dim=1)
+        # 第二个 1x1 卷积
+        x = self.act2(self.bn2(self.conv2(x)))
+        return x
+
+
+
 class C3(nn.Module):
     """Implements a CSP Bottleneck module with three convolutions for enhanced feature extraction in neural networks."""
 

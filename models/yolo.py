@@ -26,6 +26,7 @@ if platform.system() != "Windows":
     ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 from models.common import (
+    C2f,
     C3,
     C3SPP,
     C3TR,
@@ -495,6 +496,7 @@ c   :param h：一个列表，表示每一层的输入通道数。
             CrossConv,
             BottleneckCSP,
             C3,
+            C2f,
             C3TR,
             C3SPP,
             C3Ghost,
@@ -507,7 +509,7 @@ c   :param h：一个列表，表示每一层的输入通道数。
                 c2 = make_divisible(c2 * gw, ch_mul) #  # 调整通道数，确保能被 ch_mul 整除
 
             args = [c1, c2, *args[1:]]   # # 参数更新
-            if m in {BottleneckCSP, C3, C3TR, C3Ghost, C3x}:
+            if m in {BottleneckCSP, C3, C3TR, C3Ghost, C3x, C2f}:
                 args.insert(2, n)  # 添加重复次数
                 n = 1   # # 重复次数设置为1
 
