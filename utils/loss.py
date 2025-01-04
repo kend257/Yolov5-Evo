@@ -13,6 +13,7 @@ def smooth_BCE(eps=0.1):
     return 1.0 - 0.5 * eps, 0.5 * eps
 
 
+# # 二元交叉熵损失
 class BCEBlurWithLogitsLoss(nn.Module):
     """Modified BCEWithLogitsLoss to reduce missing label effects in YOLOv5 training with optional alpha smoothing."""
 

@@ -26,6 +26,8 @@ if platform.system() != "Windows":
     ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 from models.common import (
+    MobileNetV3,
+    SE,
     C2f,
     C3,
     C3SPP,
@@ -506,7 +508,7 @@ c   :param h：一个列表，表示每一层的输入通道数。
         }:
             c1, c2 = ch[f], args[0]    # 输入通道数、目标输出通道数
             if c2 != no:  # # 如果不是输出层
-                c2 = make_divisible(c2 * gw, ch_mul) #  # 调整通道数，确保能被 ch_mul 整除
+                c2 = make_divisible(c2 * gw, ch_mul) # 调整通道数，确保能被 ch_mul 整除
 
             args = [c1, c2, *args[1:]]   # # 参数更新
             if m in {BottleneckCSP, C3, C3TR, C3Ghost, C3x, C2f}:
@@ -534,6 +536,16 @@ c   :param h：一个列表，表示每一层的输入通道数。
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:   # 将特征图扩展。
             c2 = ch[f] // args[0] ** 2
+        # NOTE 新增模块后在模型解析需要保证解析成功，否则会报错。
+        elif m is SE:
+            c1 = ch[f]  # 输入通道和上一层输出保持一致
+            c2 = args[0]   # NOTE: 因为需要记录输出通道数，所以必须给c2赋值，SE模块只需要一个输入，它的输入输出保持一致
+            if c2 != no:
+                c2 = make_divisible(c2 * gw, ch_mul)
+            args = [c1, args[1]]   # # 参数更新
+        elif m is MobileNetV3:
+            c2 = args[0]
+            args = args[1:]   # 参数更新
         else:
             c2 = ch[f]  #
         # 构造模块  如果 n > 1，将模块重复 n 次。

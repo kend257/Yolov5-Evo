@@ -565,7 +565,7 @@ def parse_opt(known=False):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", type=str, default=ROOT / "yolov5n.pt", help="initial weights path")
-    parser.add_argument("--cfg", type=str, default=ROOT / "models/yolov5n_c2f.yaml", help="model.yaml path")  #
+    parser.add_argument("--cfg", type=str, default=ROOT / "models/yolov5n_mobilenetv3.yaml", help="model.yaml path")  #
     # 默认不指定，使用yolov5s.pt
     # parser.add_argument("--data", type=str, default=ROOT / "data/coco128.yaml", help="dataset.yaml path")
     parser.add_argument("--data", type=str, default=r"D:\kend\datasets\tests\data.yaml", help="dataset.yaml path")

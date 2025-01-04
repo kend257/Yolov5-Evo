@@ -8,11 +8,12 @@ import math
 import platform
 import warnings
 import zipfile
+import torchvision.models as models
 from collections import OrderedDict, namedtuple
 from copy import copy
 from pathlib import Path
 from urllib.parse import urlparse
-
+import torch.nn.functional as F
 import cv2
 import numpy as np
 import pandas as pd
@@ -231,6 +232,39 @@ class CrossConv(nn.Module):
         """Performs feature sampling, expanding, and applies shortcut if channels match; expects `x` input tensor."""
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
+
+class MobileNetV3(nn.Module):
+
+    def __init__(self, slice):
+        super(MobileNetV3, self).__init__()
+        self.model_backbone = None
+        if slice == 1:
+            self.model_backbone = models.mobilenet_v3_small(pretrained=True).features[:4]  # 对应输出为 80*80
+        elif slice == 2:
+            self.model_backbone = models.mobilenet_v3_small(pretrained=True).features[4:9]  # 对应输出为 40*40
+        else:
+            self.model_backbone = models.mobilenet_v3_small(pretrained=True).features[9:]   # # 对应输出为 20    *20
+    def forward(self, x):
+        # 返回对应的下采样输出层的模块
+        return self.model_backbone(x)
+
+
+"""
+SE structure
+"""
+class SE(nn.Module):
+    def __init__(self, in_chnls, ratio):
+        super(SE, self).__init__()
+        self.squeeze = nn.AdaptiveAvgPool2d((1, 1))
+        self.compress = nn.Conv2d(in_chnls, in_chnls // ratio, 1, 1, 0)
+        self.excitation = nn.Conv2d(in_chnls // ratio, in_chnls, 1, 1, 0)
+
+    def forward(self, x):
+        out = self.squeeze(x)
+        out = self.compress(out)
+        out = F.relu(out)
+        out = self.excitation(out)
+        return x * F.sigmoid(out)
 
 # NOTE: add yolov8 c2f modules
 class C2f(nn.Module):
