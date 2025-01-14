@@ -1,10 +1,11 @@
 # Yolov5-Evo
 
 ## 项目介绍
-本项目是基于ultralytics-Yolov5-v6.0的做的一些优化和学习。
+本项目是基于ultralytics-Yolov5-v6.0的做的一些优化和学习。主要目的是提升算法的检测速度和模型压缩后的精度
 
 ## 主要功能
 - 1: 增强了Yolov5的训练过程
+超参数的进化:https://github.com/ultralytics/yolov5/issues/607
 
 - 2: C3模块替换为yolov8的c2f模块
 
@@ -18,6 +19,7 @@
 
 5. 替换主干网络为MobileNet 提高fps
 
+6. 重新训练后的模型，使用yolov5-6.0-m网络结构做教师模型，知识蒸馏新的MobileNet主干模型，提升map。
 
 ## 注意
 - 1、在最新的yolov5-v7.0中，作者已经加入了ciou和giou的nms，所以不需要再自己实现。实际测试中ciou和giou的nms效果在密集目标和小目标上都有很好大的提升
