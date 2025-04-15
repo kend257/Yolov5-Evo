@@ -17,7 +17,7 @@
 4. 后处理nms加入ciou和giou增强小目标的检测性能
 
 
-5. 替换主干网络为MobileNet 提高fps
+5. 替换主干网络为MobileNetV3 提高fps
 
 6. 重新训练后的模型，使用yolov5-6.0-m网络结构做教师模型，知识蒸馏新的MobileNet主干模型，提升map。
 

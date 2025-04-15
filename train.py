@@ -565,13 +565,13 @@ def parse_opt(known=False):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", type=str, default=ROOT / "yolov5n.pt", help="initial weights path")
-    parser.add_argument("--cfg", type=str, default=ROOT / "models/yolov5n_mobilenetv3.yaml", help="model.yaml path")  #
+    parser.add_argument("--cfg", type=str, default=ROOT / "models/yolov5n.yaml", help="model.yaml path")  #
     # 默认不指定，使用yolov5s.pt
     # parser.add_argument("--data", type=str, default=ROOT / "data/coco128.yaml", help="dataset.yaml path")
-    parser.add_argument("--data", type=str, default=r"D:\kend\datasets\tests\data.yaml", help="dataset.yaml path")
+    parser.add_argument("--data", type=str, default=r"E:\Guanxin_Work\code\work\yolov5\Yolov5-Evo\data\pets_0415.yaml", help="dataset.yaml path")
     parser.add_argument("--hyp", type=str, default=ROOT / "data/hyps/hyp.scratch-low.yaml", help="hyperparameters path")
-    parser.add_argument("--epochs", type=int, default=20, help="total training epochs")
-    parser.add_argument("--batch-size", type=int, default=8, help="total batch size for all GPUs, -1 for autobatch")
+    parser.add_argument("--epochs", type=int, default=50, help="total training epochs")
+    parser.add_argument("--batch-size", type=int, default=64, help="total batch size for all GPUs, -1 for autobatch")
     parser.add_argument("--imgsz", "--img", "--img-size", type=int, default=640, help="train, val image size (pixels)")
     parser.add_argument("--rect", action="store_true", help="rectangular training")
     parser.add_argument("--resume", nargs="?", const=True, default=False, help="resume most recent training")
@@ -587,12 +587,12 @@ def parse_opt(known=False):
     parser.add_argument("--bucket", type=str, default="", help="gsutil bucket")
     parser.add_argument("--cache", type=str, nargs="?", const="ram", help="image --cache ram/disk")
     parser.add_argument("--image-weights", action="store_true", help="use weighted image selection for training")
-    parser.add_argument("--device", default="", help="cuda device, i.e. 0 or 0,1,2,3 or cpu")
+    parser.add_argument("--device", default="0", help="cuda device, i.e. 0 or 0,1,2,3 or cpu")
     parser.add_argument("--multi-scale", action="store_true", help="vary img-size +/- 50%%")
     parser.add_argument("--single-cls", action="store_true", help="train multi-class data as single-class")
     parser.add_argument("--optimizer", type=str, choices=["SGD", "Adam", "AdamW"], default="SGD", help="optimizer")
     parser.add_argument("--sync-bn", action="store_true", help="use SyncBatchNorm, only available in DDP mode")
-    parser.add_argument("--workers", type=int, default=8, help="max dataloader workers (per RANK in DDP mode)")
+    parser.add_argument("--workers", type=int, default=1, help="max dataloader workers (per RANK in DDP mode)")
     parser.add_argument("--project", default=ROOT / "runs/train", help="save to project/name")
     parser.add_argument("--name", default="exp", help="save to project/name")
     parser.add_argument("--exist-ok", action="store_true", help="existing project/name ok, do not increment")
